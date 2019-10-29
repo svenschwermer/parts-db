@@ -6,11 +6,6 @@ import (
 	"net/http"
 )
 
-const (
-	ListPath            = "/list"
-	ChangeInventoryPath = "/change-inventory"
-)
-
 type distributor struct {
 	Name string
 	URL  string

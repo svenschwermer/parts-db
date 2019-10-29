@@ -35,13 +35,21 @@ func main() {
 		log.Fatal(err)
 	}
 	defer db.Close()
+	if _, err := db.Exec(`PRAGMA foreign_keys = ON;`); err != nil {
+		log.Fatal(err)
+	}
 
 	auther := auth.New(templates, env.SitePassword)
-	h := handler.New(templates, auther)
+	h, err := handler.New(templates, auther, db)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	h.HandleFunc(auth.Path, auther.Login)
-	h.HandleFunc(handler.ListPath, h.List)
-	h.HandleFunc(handler.ChangeInventoryPath, h.ChangeInventory)
+	h.HandleFunc("/list", h.List)
+	h.HandleFunc("/change-inventory", h.ChangeInventory)
+	h.HandleFunc("/new", h.New)
+	h.HandleFunc("/edit", h.Edit)
 
 	err = http.ListenAndServe(env.ListenAddress, h)
 	log.Fatal(err)

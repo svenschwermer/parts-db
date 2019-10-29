@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <title>New part – parts-db</title>
+    <!--{{template "style.css"}}-->
+    <link href="style.css" />
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        td {
+            padding: 5pt 10pt;
+        }
+
+        tr:nth-child(odd) {
+            background-color: #f0f0f0;
+        }
+    </style>
+    <script>
+        function changeInventory(partId, delta) {
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function () {
+                if (this.readyState == 4) {
+                    if (this.status == 200) {
+                        document.getElementById("inventory_" + partId).innerText = this.responseText;
+                    } else {
+                        showError("Error: Status " + this.status + ": " + this.statusText)
+                    }
+                }
+            };
+            xhttp.open("POST", "change-inventory", true);
+            xhttp.send(JSON.stringify({ "part": partId, "delta": delta }));
+        }
+        function showError(str) {
+            errorElement = document.getElementById("error");
+            errorElement.innerText = str;
+            errorElement.style.display = "block";
+        }
+        function hideError() {
+            document.getElementById("error").style.display = "none";
+        }
+    </script>
+</head>
+
+<body>
+    <h1>New part</h1>
+    <div id="error" style="display: none;" onclick="hideError()"></div>
+    <div>
+        <form method="post">
+        <table>
+            <colgroup>
+                <col style="white-space: nowrap;">
+                <col style="width: 99%;">
+            </colgroup>
+            <tr>
+                <td>Part ID</td>
+                <td>
+                    <input name="id" value="new" disabled/>
+                </td>
+            </tr>
+            <tr>
+                <td>Part number</td>
+                <td>
+                    <input name="pn" autofocus/>
+                </td>
+            </tr>
+            <tr>
+                <td>Manufacturer</td>
+                <td>
+                    <input name="manufacturer" list="manufacturers" />
+                    <datalist id="manufacturers">
+
+                    </datalist>
+                </td>
+            </tr>
+            <tr>
+                <td>Category</td>
+                <td>
+                    <input name="category" list="categories"/>
+                    <datalist id="categories">
+
+                    </datalist>
+                </td>
+            </tr>
+            <tr>
+                <td>Value</td>
+                <td>
+                    <input name="value"/>
+                </td>
+            </tr>
+            <tr>
+                <td>Package</td>
+                <td>
+                    <input name="package"/>
+                </td>
+            </tr>
+            <tr>
+                <td>Description</td>
+                <td>
+                    <textarea name="description"></textarea>
+                </td>
+            </tr>
+            <tr>
+                <td>Location</td>
+                <td>
+                    <input name="location" list="locations"/>
+                    <datalist id="locations">
+
+                    </datalist>
+                </td>
+            </tr>
+            <tr>
+                <td>Inventory</td>
+                <td>
+                    <input name="inventory" type="number"/>
+                </td>
+            </tr>
+            <tr>
+                <td>Distributor</td>
+                <td>
+                    <input name="distributor"/>
+                </td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>
+                    <input type="submit"/>
+                </td>
+            </tr>
+        </table>
+        </form>
+    </div>
+</body>
+
+</html>
