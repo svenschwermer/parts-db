@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/svenschwermer/parts-db/config"
 	"github.com/svenschwermer/parts-db/session"
 )
 
@@ -22,10 +23,10 @@ type Handler struct {
 	sm     *session.Manager
 }
 
-func New(tmpl *template.Template, password string) *Handler {
+func New(tmpl *template.Template) *Handler {
 	return &Handler{
 		tmpl:   tmpl,
-		pwHash: sha256.Sum256([]byte(password)),
+		pwHash: sha256.Sum256([]byte(config.Env.SitePassword)),
 		sm:     session.NewManager(),
 	}
 }

@@ -7,10 +7,20 @@ import (
 	"net/http"
 )
 
+type newPartPage struct {
+	Title string
+	partData
+	Manufacturers []string
+	Categories    []string
+	Locations     []string
+}
+
 func (h *Handler) New(w http.ResponseWriter, req *http.Request) {
 	if h.auth.RedirectIfRequired(w, req) {
 		return
 	}
+	contents := newPartPage{Title: "New part"}
+	contents.PartID = "new"
 	if req.Method == http.MethodPost {
 		if err := req.ParseForm(); err != nil {
 			fmt.Fprint(w, err)
@@ -51,7 +61,7 @@ func (h *Handler) New(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 	}
-	err := h.tmpl.ExecuteTemplate(w, "edit.html", nil)
+	err := h.tmpl.ExecuteTemplate(w, "edit.html", contents)
 	if err != nil {
 		fmt.Fprint(w, err)
 	}

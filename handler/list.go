@@ -11,7 +11,7 @@ type distributor struct {
 	URL  string
 }
 
-type partListRow struct {
+type partData struct {
 	PartID       string
 	PartNumber   string
 	Manufacturer string
@@ -30,7 +30,7 @@ func (h *Handler) List(w http.ResponseWriter, req *http.Request) {
 	if h.auth.RedirectIfRequired(w, req) {
 		return
 	}
-	err := h.tmpl.ExecuteTemplate(w, "list.html", []partListRow{
+	err := h.tmpl.ExecuteTemplate(w, "list.html", []partData{
 		{
 			PartID:       "12",
 			PartNumber:   "CRCW020141K2FNED",
