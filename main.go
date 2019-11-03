@@ -33,12 +33,13 @@ func main() {
 		log.Fatal(err)
 	}
 
+	h.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir("html/assets"))))
 	h.HandleFunc(auth.Path, auther.Login)
 	h.HandleFunc("/list", h.List)
 	h.HandleFunc("/change-inventory", h.ChangeInventory)
 	h.HandleFunc("/new", h.New)
 	h.HandleFunc("/edit", h.Edit)
-	h.HandleFunc("/mouser", h.Mouser)
+	h.HandleFunc("/mouser/", h.Mouser)
 
 	err = http.ListenAndServe(config.Env.ListenAddress, h)
 	log.Fatal(err)

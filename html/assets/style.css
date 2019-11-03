@@ -1,0 +1,13 @@
+body {
+  font-family: Tahoma, Geneva, sans-serif;
+}
+
+div#error {
+  background-color: #f4a4a4;
+  border: #e41b1b 1.5pt solid;
+  border-radius: 5pt;
+  margin-bottom: 10pt;
+  padding: 5pt 10pt;
+  position: sticky;
+  top: 10pt;
+}

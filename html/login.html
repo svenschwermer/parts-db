@@ -1,20 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="utf-8"/>
-<title>Login – parts-db</title>
-<style>
-{{template "style.css"}}
-</style>
+  <meta charset="utf-8" />
+  <title>Login – parts-db</title>
+  <link rel="stylesheet" type="text/css" href="assets/style.css">
 </head>
+
 <body>
-<h1>Login</h1>
-<div id="error" style="display: {{- if .}} block {{- else}} none {{- end}};">{{.}}</div>
-<div>
-<form method="post">
-<input type="password" name="password" placeholder="Password" required autofocus/>
-<input type="submit"/>
-</form>
-</div>
+  <h1>Login</h1>
+  <div id="error" style="display: {{- if .}} block {{- else}} none {{- end}};">{{.}}</div>
+  <div>
+    <form method="post">
+      <input type="password" name="password" placeholder="Password" required autofocus />
+      <input type="submit" />
+    </form>
+  </div>
 </body>
+
 </html>

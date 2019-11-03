@@ -1,61 +1,60 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="utf-8"/>
-<title>List – parts-db</title>
-<style>
-{{template "style.css"}}
-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-th {
-    color: white;
-    background-color: dimgray;
-    padding: 10pt;
-    text-align: left;
-}
-td {
-    padding: 5pt 10pt;
-}
-td.inventory {
-    text-align: right;
-}
-tr:nth-child(odd) {
-    background-color: #f0f0f0;
-}
-</style>
-<script>
-function changeInventory(partId, delta) {
-    var xhttp = new XMLHttpRequest();
-    xhttp.onreadystatechange = function() {
+  <meta charset="utf-8" />
+  <title>List – parts-db</title>
+  <link rel="stylesheet" type="text/css" href="assets/style.css">
+  <style>
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th {
+      color: white;
+      background-color: dimgray;
+      padding: 10pt;
+      text-align: left;
+    }
+
+    td {
+      padding: 5pt 10pt;
+    }
+
+    td.inventory {
+      text-align: right;
+    }
+
+    tr:nth-child(odd) {
+      background-color: #f0f0f0;
+    }
+
+  </style>
+  <script src="assets/common.js"></script>
+  <script>
+    function changeInventory(partId, delta) {
+      var xhttp = new XMLHttpRequest();
+      xhttp.onreadystatechange = function () {
         if (this.readyState == 4) {
-            if (this.status == 200) {
-                document.getElementById("inventory_"+partId).innerText = this.responseText;
-            } else {
-                showError("Error: Status " + this.status + ": " + this.statusText)
-            }
+          if (this.status == 200)
+            document.getElementById("inventory_" + partId).innerText = this.responseText;
+          else
+            showError("Error: Status " + this.status + ": " + this.statusText);
         }
-    };
-    xhttp.open("POST", "change-inventory", true);
-    xhttp.send(JSON.stringify({"part": partId, "delta": delta}));
-}
-function showError(str) {
-    errorElement = document.getElementById("error");
-    errorElement.innerText = str;
-    errorElement.style.display = "block";
-}
-function hideError() {
-    document.getElementById("error").style.display = "none";
-}
-</script>
+      };
+      xhttp.open("POST", "change-inventory", true);
+      xhttp.send(JSON.stringify({ "part": partId, "delta": delta }));
+    }
+  </script>
 </head>
+
 <body>
-<h1>List</h1>
-<div id="error" style="display: none;" onclick="hideError()"></div>
-<div>
-<table>
-    <tr>
+  <h1>List</h1>
+  <div id="error" style="display: none;" onclick="hideError(this)"></div>
+  <div>
+    <table>
+      <tr>
         <th>Part number</th>
         <th>Manufacturer</th>
         <th>Category</th>
@@ -65,9 +64,9 @@ function hideError() {
         <th>Location</th>
         <th>Inventory</th>
         <th>Distributor</th>
-    </tr>
-    {{range .}}
-    <tr>
+      </tr>
+      {{range .}}
+      <tr>
         <td><a href="/edit?part={{.PartID}}">{{.PartNumber}}</a></td>
         <td>{{.Manufacturer}}</td>
         <td>{{.Category}}</td>
@@ -76,19 +75,20 @@ function hideError() {
         <td>{{.Description}}</td>
         <td>{{.Location}}</td>
         <td class="inventory">
-            <span id="inventory_{{.PartID}}">{{.Inventory}}</span>
-            <a href="javascript:changeInventory('{{.PartID}}', 1)">▲</a>
-            <a href="javascript:changeInventory('{{.PartID}}', -1)">▼</a>
+          <span id="inventory_{{.PartID}}">{{.Inventory}}</span>
+          <a href="javascript:changeInventory('{{.PartID}}', 1)">▲</a>
+          <a href="javascript:changeInventory('{{.PartID}}', -1)">▼</a>
         </td>
         <td>
-            {{range .Distributors}}
-            <a href="{{.URL}}">{{.Name}}</a>
-            <br/>
-            {{end}}
+          {{range .Distributors}}
+          <a href="{{.URL}}">{{.Name}}</a>
+          <br />
+          {{end}}
         </td>
-    </tr>
-    {{end}}
-</table>
-</div>
+      </tr>
+      {{end}}
+    </table>
+  </div>
 </body>
+
 </html>

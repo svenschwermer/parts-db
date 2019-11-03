@@ -10,9 +10,10 @@ import (
 type newPartPage struct {
 	Title string
 	partData
-	Manufacturers []string
-	Categories    []string
-	Locations     []string
+	Manufacturers    []string
+	Categories       []string
+	Locations        []string
+	DistributorNames []string
 }
 
 func (h *Handler) New(w http.ResponseWriter, req *http.Request) {
