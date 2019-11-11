@@ -13,6 +13,6 @@ function showError(str, code) {
 
 }
 
-function hideError(obj) {
+function hide(obj) {
   obj.style.display = "none";
 }

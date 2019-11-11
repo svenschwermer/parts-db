@@ -37,7 +37,7 @@
   <script src="assets/common.js"></script>
   <script>
     function mouser() {
-      pn = window.prompt("Mouser P/N", "580-DA101C");
+      pn = window.prompt("Mouser P/N", "");
       if (pn == null)
         return;
       var xhttp = new XMLHttpRequest();
@@ -126,7 +126,15 @@
 
 <body>
   <h1>{{.Title}}</h1>
-  <div id="error" style="display: none;" onclick="hideError(this)"></div>
+  <nav>
+    <ul>
+      <li>
+        <a href="/list">Back to list</a>
+      </li>
+    </ul>
+  </nav>
+  <div id="error" style="display: {{- if .Error}} block {{- else}} none {{- end}};" onclick="hide(this)">ERROR: {{.Error}}</div>
+  <div id="info" style="display: {{- if .Info}} block {{- else}} none {{- end}};" onclick="hide(this)">INFO: {{.Info}}</div>
   <form method="post">
     <div class="full-width">
       <input type="button" value="Mouser" onclick="mouser()" />

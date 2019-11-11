@@ -40,6 +40,13 @@ func main() {
 	h.HandleFunc("/new", h.New)
 	h.HandleFunc("/edit", h.Edit)
 	h.HandleFunc("/mouser/", h.Mouser)
+	h.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
+		if req.URL.Path == "/" {
+			http.Redirect(w, req, "/list", http.StatusFound)
+		} else {
+			http.NotFound(w, req)
+		}
+	})
 
 	err = http.ListenAndServe(config.Env.ListenAddress, h)
 	log.Fatal(err)
