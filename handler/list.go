@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+
+	"github.com/svenschwermer/parts-db/si"
 )
 
 type distributor struct {
@@ -34,7 +36,7 @@ func (h *Handler) List(w http.ResponseWriter, req *http.Request) {
 	}
 
 	rows, err := h.db.Query(`
-		SELECT p.id, pn, manufacturer, c.name, value, package, description, location, inventory
+		SELECT p.id, pn, manufacturer, c.name, value, package, unit, description, location, inventory
 		FROM parts p
 		LEFT JOIN (
 			SELECT id, name
@@ -49,23 +51,27 @@ func (h *Handler) List(w http.ResponseWriter, req *http.Request) {
 	var parts []partData
 	for rows.Next() {
 		var id, inventory sql.NullInt32
-		var pn, mfr, cat, val, pkg, desc, loc sql.NullString
-		if err = rows.Scan(&id, &pn, &mfr, &cat, &val, &pkg, &desc, &loc, &inventory); err != nil {
+		var pn, mfr, cat, pkg, unit, desc, loc sql.NullString
+		val := new(si.Quantity)
+		err = rows.Scan(&id, &pn, &mfr, &cat, val, &pkg, &unit, &desc, &loc, &inventory)
+		if err != nil {
 			log.Println(err)
 		} else {
-			parts = append(parts, partData{
+			p := partData{
 				PartID:       fmt.Sprint(id.Int32),
 				PartNumber:   pn.String,
 				Manufacturer: mfr.String,
 				Category:     cat.String,
-				Value:        val.String,
-				UnitPrefix:   "",
-				Unit:         "",
+				Unit:         unit.String,
 				Package:      pkg.String,
 				Description:  desc.String,
 				Location:     loc.String,
 				Inventory:    inventory.Int32,
-			})
+			}
+			if val.Valid {
+				p.Value, p.UnitPrefix = val.Coeff, val.Prefix
+			}
+			parts = append(parts, p)
 		}
 	}
 
