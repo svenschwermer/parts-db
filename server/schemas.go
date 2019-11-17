@@ -1,4 +1,4 @@
-package handler
+package server
 
 var schemas = []string{
 	`CREATE TABLE IF NOT EXISTS categories (
@@ -26,8 +26,8 @@ var schemas = []string{
 		FOREIGN KEY(part) REFERENCES parts(id));`,
 }
 
-func (h *Handler) createTables() error {
-	tx, err := h.db.Begin()
+func (s *Server) createTables() error {
+	tx, err := s.db.Begin()
 	if err != nil {
 		return err
 	}

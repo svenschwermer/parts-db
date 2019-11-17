@@ -10,7 +10,7 @@ import (
 
 	"github.com/svenschwermer/parts-db/auth"
 	"github.com/svenschwermer/parts-db/config"
-	"github.com/svenschwermer/parts-db/handler"
+	"github.com/svenschwermer/parts-db/server"
 )
 
 var templates = template.Must(template.ParseGlob("html/*.*"))
@@ -28,7 +28,7 @@ func main() {
 	}
 
 	auther := auth.New(templates)
-	h, err := handler.New(templates, auther, db)
+	h, err := server.New(templates, auther, db)
 	if err != nil {
 		log.Fatal(err)
 	}

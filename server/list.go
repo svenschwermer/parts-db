@@ -1,4 +1,4 @@
-package handler
+package server
 
 import (
 	"database/sql"
@@ -30,12 +30,12 @@ type partData struct {
 	Distributors []distributor
 }
 
-func (h *Handler) List(w http.ResponseWriter, req *http.Request) {
-	if h.auth.RedirectIfRequired(w, req) {
+func (s *Server) List(w http.ResponseWriter, req *http.Request) {
+	if s.auth.RedirectIfRequired(w, req) {
 		return
 	}
 
-	rows, err := h.db.Query(`
+	rows, err := s.db.Query(`
 		SELECT p.id, pn, manufacturer, c.name, value, package, unit, description, location, inventory
 		FROM parts p
 		LEFT JOIN (
@@ -75,7 +75,7 @@ func (h *Handler) List(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	err = h.tmpl.ExecuteTemplate(w, "list.html", parts)
+	err = s.tmpl.ExecuteTemplate(w, "list.html", parts)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
@@ -86,8 +86,8 @@ type changeInventoryReq struct {
 	Delta int
 }
 
-func (h *Handler) ChangeInventory(w http.ResponseWriter, req *http.Request) {
-	if h.auth.Required(w, req) {
+func (s *Server) ChangeInventory(w http.ResponseWriter, req *http.Request) {
+	if s.auth.Required(w, req) {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
@@ -102,7 +102,7 @@ func (h *Handler) ChangeInventory(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	_, err := h.db.Exec(`
+	_, err := s.db.Exec(`
 		UPDATE parts
 		SET inventory = inventory + ?
 		WHERE id = ?
@@ -114,7 +114,7 @@ func (h *Handler) ChangeInventory(w http.ResponseWriter, req *http.Request) {
 	}
 
 	var newInventory int
-	err = h.db.QueryRow(`
+	err = s.db.QueryRow(`
 		SELECT inventory
 		FROM parts
 		WHERE id = ?

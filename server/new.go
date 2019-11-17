@@ -1,4 +1,4 @@
-package handler
+package server
 
 import (
 	"database/sql"
@@ -20,35 +20,35 @@ type newPartPage struct {
 	DistributorNames []string
 }
 
-func (h *Handler) New(w http.ResponseWriter, req *http.Request) {
-	if h.auth.RedirectIfRequired(w, req) {
+func (s *Server) New(w http.ResponseWriter, req *http.Request) {
+	if s.auth.RedirectIfRequired(w, req) {
 		return
 	}
 	contents := newPartPage{Title: "New part"}
 	contents.PartID = "new"
 	if req.Method == http.MethodPost {
-		if err := h.postNew(w, req); err != nil {
+		if err := s.postNew(w, req); err != nil {
 			contents.Error = err.Error()
 			// TODO: fill form with entered data
 		} else {
 			contents.Info = "Part added"
 		}
 	}
-	h.populateLists(&contents)
-	err := h.tmpl.ExecuteTemplate(w, "edit.html", contents)
+	s.populateLists(&contents)
+	err := s.tmpl.ExecuteTemplate(w, "edit.html", contents)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
 
-func (h *Handler) populateLists(contents *newPartPage) {
-	h.populateList("manufacturer", &contents.Manufacturers)
-	h.populateList("category", &contents.Categories)
-	h.populateList("location", &contents.Locations)
+func (s *Server) populateLists(contents *newPartPage) {
+	s.populateList("manufacturer", &contents.Manufacturers)
+	s.populateList("category", &contents.Categories)
+	s.populateList("location", &contents.Locations)
 }
 
-func (h *Handler) populateList(col string, l *[]string) {
-	rows, err := h.db.Query("SELECT DISTINCT " + col + " FROM parts")
+func (s *Server) populateList(col string, l *[]string) {
+	rows, err := s.db.Query("SELECT DISTINCT " + col + " FROM parts")
 	if err == nil {
 		for rows.Next() {
 			var v string
@@ -59,11 +59,11 @@ func (h *Handler) populateList(col string, l *[]string) {
 	}
 }
 
-func (h *Handler) postNew(w http.ResponseWriter, req *http.Request) error {
+func (s *Server) postNew(w http.ResponseWriter, req *http.Request) error {
 	if err := req.ParseForm(); err != nil {
 		return err
 	}
-	tx, err := h.db.Begin()
+	tx, err := s.db.Begin()
 	if err != nil {
 		return err
 	}
@@ -72,7 +72,7 @@ func (h *Handler) postNew(w http.ResponseWriter, req *http.Request) error {
 	var catID sql.NullInt32
 	cat := req.PostForm.Get("category")
 	if cat != "" {
-		catID, err = h.getCategoryID(tx, cat)
+		catID, err = getCategoryID(tx, cat)
 		if err != nil {
 			return err
 		}
@@ -104,7 +104,7 @@ func (h *Handler) postNew(w http.ResponseWriter, req *http.Request) error {
 	return tx.Commit()
 }
 
-func (h *Handler) getCategoryID(tx *sql.Tx, category string) (id sql.NullInt32, err error) {
+func getCategoryID(tx *sql.Tx, category string) (id sql.NullInt32, err error) {
 	getID, err := tx.Prepare(`SELECT id FROM categories WHERE name = ?`)
 	if err != nil {
 		return

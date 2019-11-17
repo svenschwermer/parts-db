@@ -17,27 +17,27 @@ const (
 	sessionValidity = 24 * time.Hour
 )
 
-type Handler struct {
+type Server struct {
 	tmpl   *template.Template
 	pwHash [sha256.Size]byte
 	sm     *session.Manager
 }
 
-func New(tmpl *template.Template) *Handler {
-	return &Handler{
+func New(tmpl *template.Template) *Server {
+	return &Server{
 		tmpl:   tmpl,
 		pwHash: sha256.Sum256([]byte(config.Env.SitePassword)),
 		sm:     session.NewManager(),
 	}
 }
 
-func (h *Handler) Required(w http.ResponseWriter, req *http.Request) bool {
+func (s *Server) Required(w http.ResponseWriter, req *http.Request) bool {
 	cookie, err := req.Cookie("session")
-	return err != nil || !h.sm.Valid(cookie.Value)
+	return err != nil || !s.sm.Valid(cookie.Value)
 }
 
-func (h *Handler) RedirectIfRequired(w http.ResponseWriter, req *http.Request) bool {
-	if h.Required(w, req) {
+func (s *Server) RedirectIfRequired(w http.ResponseWriter, req *http.Request) bool {
+	if s.Required(w, req) {
 		referer := url.QueryEscape(req.URL.String())
 		http.Redirect(w, req, Path+"?referer="+referer, http.StatusFound)
 		return true
@@ -45,7 +45,7 @@ func (h *Handler) RedirectIfRequired(w http.ResponseWriter, req *http.Request) b
 	return false
 }
 
-func (h *Handler) Login(w http.ResponseWriter, req *http.Request) {
+func (s *Server) Login(w http.ResponseWriter, req *http.Request) {
 	var errorString string
 
 	if req.Method == http.MethodPost {
@@ -54,14 +54,14 @@ func (h *Handler) Login(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 		hashed := sha256.Sum256([]byte(req.PostForm.Get("password")))
-		if bytes.Equal(hashed[:], h.pwHash[:]) {
+		if bytes.Equal(hashed[:], s.pwHash[:]) {
 			redirect, err := url.QueryUnescape(req.FormValue("referer"))
 			if err != nil {
 				redirect = "/"
 			}
 			http.SetCookie(w, &http.Cookie{
 				Name:  "session",
-				Value: h.sm.New(sessionValidity),
+				Value: s.sm.New(sessionValidity),
 			})
 			http.Redirect(w, req, redirect, http.StatusFound)
 			return
@@ -69,7 +69,7 @@ func (h *Handler) Login(w http.ResponseWriter, req *http.Request) {
 		errorString = "ERROR: Invalid Password"
 	}
 
-	err := h.tmpl.ExecuteTemplate(w, "login.html", errorString)
+	err := s.tmpl.ExecuteTemplate(w, "login.html", errorString)
 	if err != nil {
 		w.Write([]byte(err.Error()))
 	}

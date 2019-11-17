@@ -1,4 +1,4 @@
-package handler
+package server
 
 import (
 	"bytes"
@@ -11,8 +11,8 @@ import (
 )
 
 // Mouser forwards the request to the Mouser API server and returns its result
-func (h *Handler) Mouser(w http.ResponseWriter, req *http.Request) {
-	if h.auth.Required(w, req) {
+func (s *Server) Mouser(w http.ResponseWriter, req *http.Request) {
+	if s.auth.Required(w, req) {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}

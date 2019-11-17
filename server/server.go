@@ -1,4 +1,4 @@
-package handler
+package server
 
 import (
 	"database/sql"
@@ -11,17 +11,17 @@ type authHandler interface {
 	RedirectIfRequired(http.ResponseWriter, *http.Request) bool
 }
 
-type Handler struct {
+type Server struct {
 	*http.ServeMux
 	tmpl *template.Template
 	auth authHandler
 	db   *sql.DB
 }
 
-func New(tmpl *template.Template, auth authHandler, db *sql.DB) (*Handler, error) {
-	h := &Handler{http.NewServeMux(), tmpl, auth, db}
-	if err := h.createTables(); err != nil {
+func New(tmpl *template.Template, auth authHandler, db *sql.DB) (*Server, error) {
+	s := &Server{http.NewServeMux(), tmpl, auth, db}
+	if err := s.createTables(); err != nil {
 		return nil, err
 	}
-	return h, nil
+	return s, nil
 }
