@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/svenschwermer/parts-db/si"
@@ -69,14 +70,13 @@ func (s *Server) postNew(w http.ResponseWriter, req *http.Request) error {
 	}
 	defer tx.Rollback()
 
-	var catID sql.NullInt32
+	var catID sql.NullInt64
 	cat := req.PostForm.Get("category")
 	if cat != "" {
 		catID, err = getCategoryID(tx, cat)
 		if err != nil {
 			return err
 		}
-		catID.Valid = true
 	}
 
 	var mag, unit sql.NullString
@@ -90,7 +90,7 @@ func (s *Server) postNew(w http.ResponseWriter, req *http.Request) error {
 		unit.String, unit.Valid = val.Unit, true
 	}
 
-	_, err = tx.Exec(`
+	result, err := tx.Exec(`
 		INSERT INTO parts
 		(pn,manufacturer,category,value,unit,package,description,location,inventory)
 		VALUES
@@ -101,27 +101,62 @@ func (s *Server) postNew(w http.ResponseWriter, req *http.Request) error {
 	if err != nil {
 		return err
 	}
+	partID, err := result.LastInsertId()
+	if err != nil {
+		return err
+	}
+
+	err = addDistis(tx, partID, req.PostForm)
+	if err != nil {
+		return err
+	}
+
 	return tx.Commit()
 }
 
-func getCategoryID(tx *sql.Tx, category string) (id sql.NullInt32, err error) {
-	getID, err := tx.Prepare(`SELECT id FROM categories WHERE name = ?`)
-	if err != nil {
-		return
-	}
-	err = getID.QueryRow(category).Scan(&id)
+func getCategoryID(tx *sql.Tx, category string) (id sql.NullInt64, err error) {
+	err = tx.QueryRow("SELECT id FROM categories WHERE name = ?", category).Scan(&id)
+	var result sql.Result
 	if err == sql.ErrNoRows {
-		_, err = tx.Exec(`INSERT INTO categories (name) VALUES (?)`, category)
+		result, err = tx.Exec("INSERT INTO categories (name) VALUES (?)", category)
+		if err != nil {
+			return
+		}
+		id.Int64, err = result.LastInsertId()
 	}
 	if err != nil {
 		return
 	}
-	err = getID.QueryRow(category).Scan(&id)
-	return id, err
+	id.Valid = true
+	return
 }
 
 func getPostString(req *http.Request, name string) sql.NullString {
-	s := sql.NullString{String: req.PostForm.Get("pn")}
+	s := sql.NullString{String: req.PostForm.Get(name)}
 	s.Valid = (s.String != "")
 	return s
+}
+
+func addDistis(tx *sql.Tx, partID int64, postForm url.Values) error {
+	for k, v := range postForm {
+		if strings.HasPrefix(k, "disti_name_") {
+			var id int
+			n, err := fmt.Sscanf(k, "disti_name_%d", &id)
+			if err != nil {
+				return fmt.Errorf("invalid distributor name parameter: %s", err)
+			}
+			if n != 1 {
+				return fmt.Errorf("invalid distributor name parameter: n=%d", n)
+			}
+
+			url := postForm.Get(fmt.Sprintf("disti_url_%d", id))
+			_, err = tx.Exec(`
+				INSERT INTO distributors (part,name,url)
+				VALUES (?,?,?)`, partID, v[0], url)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }

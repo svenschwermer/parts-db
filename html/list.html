@@ -30,6 +30,12 @@
       background-color: #f0f0f0;
     }
 
+    td ul {
+      list-style-type: none;
+      margin: 0;
+      padding: 0;
+    }
+
   </style>
   <script src="assets/common.js"></script>
   <script>
@@ -87,9 +93,12 @@
           <a href="javascript:changeInventory('{{.PartID}}', -1)">▼</a>
         </td>
         <td>
-          {{range .Distributors}}
-          <a href="{{.URL}}">{{.Name}}</a>
-          <br />
+          {{if .Distributors}}
+          <ul>
+            {{range .Distributors}}
+            <li><a href="{{.URL}}">{{.Name}}</a></li>
+            {{end}}
+          </ul>
           {{end}}
         </td>
       </tr>

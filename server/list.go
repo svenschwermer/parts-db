@@ -36,43 +36,64 @@ func (s *Server) List(w http.ResponseWriter, req *http.Request) {
 	}
 
 	rows, err := s.db.Query(`
-		SELECT p.id, pn, manufacturer, c.name, value, package, unit, description, location, inventory
+		SELECT p.id, pn, manufacturer, c.name, value, package, unit,
+			description, location, inventory, d.name, d.url
 		FROM parts p
 		LEFT JOIN (
 			SELECT id, name
 			FROM categories
 		) c ON p.category = c.id
+		LEFT JOIN (
+			SELECT part, name, url
+			FROM distributors
+		) d ON p.id = d.part
 	`)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	var parts []partData
+	var parts []*partData
+	partLookup := make(map[string]*partData)
 	for rows.Next() {
 		var id, inventory sql.NullInt32
-		var pn, mfr, cat, pkg, unit, desc, loc sql.NullString
+		var pn, mfr, cat, pkg, unit, desc, loc, distiName, distiURL sql.NullString
 		val := new(si.Quantity)
-		err = rows.Scan(&id, &pn, &mfr, &cat, val, &pkg, &unit, &desc, &loc, &inventory)
+		err = rows.Scan(&id, &pn, &mfr, &cat, val, &pkg, &unit, &desc, &loc, &inventory, &distiName, &distiURL)
 		if err != nil {
 			log.Println(err)
-		} else {
-			p := partData{
-				PartID:       fmt.Sprint(id.Int32),
-				PartNumber:   pn.String,
-				Manufacturer: mfr.String,
-				Category:     cat.String,
-				Unit:         unit.String,
-				Package:      pkg.String,
-				Description:  desc.String,
-				Location:     loc.String,
-				Inventory:    inventory.Int32,
-			}
-			if val.Valid {
-				p.Value, p.UnitPrefix = val.Coeff, val.Prefix
-			}
-			parts = append(parts, p)
+			continue
 		}
+
+		idString := fmt.Sprint(id.Int32)
+		disti := distributor{
+			Name: distiName.String,
+			URL:  distiURL.String,
+		}
+		if p, ok := partLookup[idString]; ok {
+			p.Distributors = append(p.Distributors, disti)
+			continue
+		}
+
+		p := &partData{
+			PartID:       idString,
+			PartNumber:   pn.String,
+			Manufacturer: mfr.String,
+			Category:     cat.String,
+			Unit:         unit.String,
+			Package:      pkg.String,
+			Description:  desc.String,
+			Location:     loc.String,
+			Inventory:    inventory.Int32,
+		}
+		if val.Valid {
+			p.Value, p.UnitPrefix = val.Coeff, val.Prefix
+		}
+		if distiName.Valid && distiURL.Valid {
+			p.Distributors = []distributor{disti}
+		}
+		parts = append(parts, p)
+		partLookup[p.PartID] = p
 	}
 
 	err = s.tmpl.ExecuteTemplate(w, "list.html", parts)
