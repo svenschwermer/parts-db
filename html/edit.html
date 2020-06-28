@@ -2,38 +2,18 @@
 <html lang="en">
 
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+    integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+  <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
+    integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"
+    crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
+    integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
+    crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/3.1.0/mustache.min.js" integrity="sha256-MPgtcamIpCPKRRm1ppJHkvtNBAuE71xcOM+MmQytXi8=" crossorigin="anonymous"></script>
   <title>{{.Title}} – parts-db</title>
-  <link rel="stylesheet" type="text/css" href="assets/style.css">
-  <style>
-    form {
-      width: 40em;
-      display: grid;
-      grid-gap: 5pt;
-      grid-auto-columns: max-content 20% auto min-content;
-    }
-
-    label {
-      grid-column: 1 / 2;
-      padding-top: 3pt;
-    }
-
-    textarea,
-    input[type="text"],
-    input[type="number"],
-    input[type="url"] {
-      font-family: inherit;
-      font-size: 10pt;
-      padding: 3pt;
-      border: 1pt lightgray solid;
-      border-radius: 3pt;
-    }
-
-    .full-width {
-      grid-column: 2 / 5;
-    }
-
-  </style>
   <script src="assets/common.js"></script>
   <script>
     function mouser() {
@@ -71,48 +51,16 @@
       xhttp.send(JSON.stringify(req));
     }
     var disti_count = 0;
-    function get_disti_frag(no) {
-      const frag = document.createDocumentFragment();
-      var label = document.createElement("label");
-      label.setAttribute("id", "disti_" + no);
-      label.setAttribute("for", "disti_name_" + no);
-      label.appendChild(document.createTextNode("Distributor"))
-      frag.appendChild(label);
-      var name = document.createElement("input");
-      name.setAttribute("type", "text");
-      name.setAttribute("name", "disti_name_" + no);
-      name.setAttribute("id", "disti_name_" + no);
-      name.setAttribute("list", "disti_list");
-      name.setAttribute("placeholder", "Name");
-      frag.appendChild(name);
-      var url = document.createElement("input");
-      url.setAttribute("type", "url");
-      url.setAttribute("name", "disti_url_" + no);
-      url.setAttribute("id", "disti_url_" + no);
-      url.setAttribute("placeholder", "URL");
-      url.setAttribute("onclick", "open_url(event, this)");
-      url.setAttribute("onmousemove", "url_cursor(event, this)");
-      frag.appendChild(url);
-      var rm = document.createElement("input");
-      rm.setAttribute("type", "button");
-      rm.setAttribute("value", "❌");
-      rm.setAttribute("onclick", "rm_disti(" + no + ", this)");
-      frag.appendChild(rm);
-      return frag;
-    }
     function add_disti() {
-      const form = document.getElementsByTagName("form")[0];
-      const frag = get_disti_frag(++disti_count);
-      const footer = document.getElementById("footer");
-      form.insertBefore(frag, footer);
+      Mustache.tags = ['{%', '%}'];
+      var tmpl = $('#disti-tmpl').html();
+      Mustache.parse(tmpl);
+      var rendered = Mustache.render(tmpl, {i: ++disti_count});
+      $("#distributors").append(rendered)
       return disti_count;
     }
     function rm_disti(no, btn) {
-      const form = document.getElementsByTagName("form")[0];
-      form.removeChild(document.getElementById("disti_" + no));
-      form.removeChild(document.getElementById("disti_name_" + no));
-      form.removeChild(document.getElementById("disti_url_" + no));
-      form.removeChild(btn);
+      $("#disti-" + no).remove()
     }
     function open_url(event, url_field) {
       if (event.shiftKey)
@@ -125,73 +73,121 @@
 </head>
 
 <body>
-  <h1>{{.Title}}</h1>
-  <nav>
-    <ul>
-      <li>
-        <a href="/list">Back to list</a>
-      </li>
-    </ul>
+  <nav class="navbar navbar-expand-sm navbar-dark bg-dark">
+    <a class="navbar-brand" href="#">parts-db</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+      aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav mr-auto">
+        <li class="nav-item">
+          <a class="nav-link" href="/list">List</a>
+        </li>
+        <li class="nav-item active">
+          <a class="nav-link" href="/new">New Part <span class="sr-only">(current)</span></a>
+        </li>
+      </ul>
+    </div>
   </nav>
   <div id="error" style="display: {{- if .Error}} block {{- else}} none {{- end}};" onclick="hide(this)">ERROR: {{.Error}}</div>
   <div id="info" style="display: {{- if .Info}} block {{- else}} none {{- end}};" onclick="hide(this)">INFO: {{.Info}}</div>
-  <form method="post">
-    <div class="full-width">
-      <input type="button" value="Mouser" onclick="mouser()" />
-      <input type="button" value="Digi-Key" onclick="digikey()" disabled />
+  
+  <form method="post" style="padding: 1.5rem; max-width: 40rem;">
+    <div class="form-group">
+      <input type="button" class="btn btn-primary" value="Mouser" onclick="mouser()">
+      <input type="button" class="btn btn-primary" value="Digi-Key" onclick="digikey()" disabled>
     </div>
-
-    <label>Part ID</label>
-    <input type="text" name="id" class="full-width" value="{{.PartID}}" readonly />
-
-    <label for="pn">Part number</label>
-    <input type="text" name="pn" id="pn" class="full-width" value="{{.PartNumber}}" autofocus />
-
-    <label for="mfr">Manufacturer</label>
-    <input type="text" name="manufacturer" id="mfr" class="full-width" list="mfr_list" value="{{.Manufacturer}}" />
-    <datalist id="mfr_list">
-      {{range .Manufacturers}}
-      <option value="{{.}}">
+    <div class="form-group form-row">
+      <div class="col">
+        <label for="id-field">Part ID</label>
+        <input name="id" id="id-field" class="form-control" value="{{.PartID}}" readonly>
+      </div>
+      <div class="col">
+        <label for="cat-field">Category</label>
+        <input name="category" id="cat-field" class="form-control" list="cat-list" value="{{.Category}}">
+        <datalist id="cat-list">
+          {{range .Categories}}
+          <option value="{{.}}">
+          {{end}}
+        </datalist>
+      </div>
+    </div>
+    <div class="form-group form-row">
+      <div class="col">
+        <label for="mfr-field">Manufacturer</label>
+        <input name="mfr" id="mfr-field" class="form-control" list="mfr-list" value="{{.Manufacturer}}">
+        <datalist id="mfr-list">
+          {{range .Manufacturers}}
+          <option value="{{.}}">
+          {{end}}
+        </datalist>
+      </div>
+      <div class="col">
+        <label for="pn-field">Part number</label>
+        <input name="pn" id="pn-field" class="form-control" value="{{.PartNumber}}" autofocus>
+      </div>
+    </div>
+    <div class="form-group form-row">
+      <div class="col">
+        <label for="val-field">Value</label>
+        <input name="value" id="val-field" class="form-control" value="{{.Value}}">
+      </div>
+      <div class="col">
+        <label for="package-field">Package</label>
+        <input name="package" id="package-field" class="form-control" value="{{.Package}}">
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="desc-field">Description</label>
+      <textarea name="description" id="desc-field" class="form-control">{{.Description}}</textarea>
+    </div>
+    <div class="form-group form-row">
+      <div class="col">
+        <label for="loc-field">Location</label>
+        <input name="location" id="loc-field" class="form-control" list="loc-list" value="{{.Location}}">
+        <datalist id="loc-list">
+          {{range .Locations}}
+          <option value="{{.}}">
+          {{end}}
+        </datalist>
+      </div>
+      <div class="col">
+        <label for="inventory-field">Inventory</label>
+        <input type="number" name="inventory" id="inventory-field" class="form-control" value="{{.Inventory}}">
+      </div>
+    </div>
+    <div id="distributors">
+      <datalist id="disti-list">
+        {{range .DistributorNames}}
+        <option value="{{.}}">
         {{end}}
-    </datalist>
-
-    <label for="cat">Category</label>
-    <input type="text" name="category" id="cat" class="full-width" list="categories" value="{{.Category}}" />
-    <datalist id="categories">
-      {{range .Categories}}
-      <option value="{{.}}">
-        {{end}}
-    </datalist>
-
-    <label for="val">Value</label>
-    <input type="text" name="value" id="val" class="full-width" value="{{.Value}}" />
-
-    <label for="package">Package</label>
-    <input type="text" name="package" id="package" class="full-width" value="{{.Package}}" />
-
-    <label for="desc">Description</label>
-    <textarea name="description" id="desc" class="full-width">{{.Description}}</textarea>
-
-    <label for="loc">Location</label>
-    <input type="text" name="location" id="loc" class="full-width" list="loc_list" value="{{.Location}}" />
-    <datalist id="loc_list">
-      {{range .Locations}}
-      <option value="{{.}}">
-        {{end}}
-    </datalist>
-
-    <label for="inventory">Inventory</label>
-    <input type="number" name="inventory" id="inventory" class="full-width" value="{{.Inventory}}" />
-
-    <datalist id="disti_list">
-      {{range .DistributorNames}}
-      <option value="{{.}}">
-        {{end}}
-    </datalist>
-
-    <div id="footer" class="full-width">
-      <input type="button" value="Add Distributor" onclick="add_disti()" />
-      <input type="submit" value="Submit" />
+      </datalist>
+      <script id="disti-tmpl" type="x-tmpl-mustache">
+        <div id="disti-{%i%}" class="form-group">
+          <label for="distri-name-{%i%}">Distributor {%i%}</label>
+          <div class="form-row align-items-center">
+            <div class="col form-row">
+              <div class="col-4">
+                <input name="disti_name_{%i%}" id="distri-name-{%i%}" class="form-control" placeholder="Name">
+              </div>
+              <div class="col-8">
+                <input type="url" name="disti_url_{%i%}" name="disti-url-{%i%}" class="form-control" placeholder="URL"
+                  onclick="open_url(event, this)" onmousemove="url_cursor(event, this)">
+              </div>
+            </div>
+            <div class="col-auto">
+              <button type="button" class="close" onclick="rm_disti({%i%})" style="padding: 0.4rem" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </script>
+    </div>
+    <div class="form-group">
+      <input type="button" class="btn btn-primary" value="Add Distributor" onclick="add_disti()">
+      <input type="submit" class="btn btn-primary" value="Submit">
     </div>
   </form>
 </body>

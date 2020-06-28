@@ -2,41 +2,18 @@
 <html lang="en">
 
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+    integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+  <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
+    integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"
+    crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
+    integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
+    crossorigin="anonymous"></script>
   <title>List – parts-db</title>
-  <link rel="stylesheet" type="text/css" href="assets/style.css">
-  <style>
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
 
-    th {
-      color: white;
-      background-color: dimgray;
-      padding: 10pt;
-      text-align: left;
-    }
-
-    td {
-      padding: 5pt 10pt;
-    }
-
-    td.inventory {
-      text-align: right;
-    }
-
-    tr:nth-child(odd) {
-      background-color: #f0f0f0;
-    }
-
-    td ul {
-      list-style-type: none;
-      margin: 0;
-      padding: 0;
-    }
-
-  </style>
   <script src="assets/common.js"></script>
   <script>
     function changeInventory(partId, delta) {
@@ -56,53 +33,70 @@
 </head>
 
 <body>
-    <h1>List</h1>
-    <nav>
-    <ul>
-      <li>
-        <a href="/new">New part</a>
-      </li>
-    </ul>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <a class="navbar-brand" href="#">parts-db</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+      aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav mr-auto">
+        <li class="nav-item active">
+          <a class="nav-link" href="/list">List <span class="sr-only">(current)</span></a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/new">New Part</a>
+        </li>
+      </ul>
+    </div>
   </nav>
-  <div id="error" style="display: none;" onclick="hide(this)"></div>
-  <div>
-    <table>
-      <tr>
-        <th>Part number</th>
-        <th>Manufacturer</th>
-        <th>Category</th>
-        <th>Value</th>
-        <th>Package</th>
-        <th>Description</th>
-        <th>Location</th>
-        <th>Inventory</th>
-        <th>Distributor</th>
-      </tr>
-      {{range .}}
-      <tr>
-        <td><a href="/edit?part={{.PartID}}">{{.PartNumber}}</a></td>
-        <td>{{.Manufacturer}}</td>
-        <td>{{.Category}}</td>
-        <td>{{.Value}}&#8239;{{.UnitPrefix}}{{.Unit}}</td>
-        <td>{{.Package}}</td>
-        <td>{{.Description}}</td>
-        <td>{{.Location}}</td>
-        <td class="inventory">
-          <span id="inventory_{{.PartID}}">{{.Inventory}}</span>
-          <a href="javascript:changeInventory('{{.PartID}}', 1)">▲</a>
-          <a href="javascript:changeInventory('{{.PartID}}', -1)">▼</a>
-        </td>
-        <td>
-          {{if .Distributors}}
-          <ul>
-            {{range .Distributors}}
-            <li><a href="{{.URL}}">{{.Name}}</a></li>
+
+  <div class="container-fluid">
+    <div class="alert alert-danger" role="alert" onclick="hide(this)">
+      This is an error message!
+    </div>
+
+    <table class="table">
+      <thead>
+        <tr>
+          <th scope="col">Part number</th scope="col">
+          <th scope="col">Manufacturer</th scope="col">
+          <th scope="col">Category</th>
+          <th scope="col">Value</th scope="col">
+          <th scope="col">Package</th scope="col">
+          <th scope="col">Description</th scope="col">
+          <th scope="col">Location</th>
+          <th scope="col">Inventory</th scope="col">
+          <th scope="col">Distributor</th scope="col">
+        </tr>
+      </thead>
+      <tbody>
+        {{range .}}
+        <tr>
+          <td><a href="/edit?part={{.PartID}}">{{.PartNumber}}</a></td>
+          <td>{{.Manufacturer}}</td>
+          <td>{{.Category}}</td>
+          <td>{{.Value}}&#8239;{{.UnitPrefix}}{{.Unit}}</td>
+          <td>{{.Package}}</td>
+          <td>{{.Description}}</td>
+          <td>{{.Location}}</td>
+          <td class="inventory">
+            <span id="inventory_{{.PartID}}">{{.Inventory}}</span>
+            <a href="javascript:changeInventory('{{.PartID}}', 1)">▲</a>
+            <a href="javascript:changeInventory('{{.PartID}}', -1)">▼</a>
+          </td>
+          <td>
+            {{if .Distributors}}
+            <ul>
+              {{range .Distributors}}
+              <li><a href="{{.URL}}">{{.Name}}</a></li>
+              {{end}}
+            </ul>
             {{end}}
-          </ul>
-          {{end}}
-        </td>
-      </tr>
-      {{end}}
+          </td>
+        </tr>
+        {{end}}
+      </tbody>
     </table>
   </div>
 </body>

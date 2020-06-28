@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/fsnotify/fsnotify"
 	_ "github.com/mattn/go-sqlite3"
 
 	"github.com/svenschwermer/parts-db/auth"
@@ -14,6 +15,18 @@ import (
 )
 
 var templates = template.Must(template.ParseGlob("html/*.*"))
+
+func watchTemplates(watcher *fsnotify.Watcher) {
+	for e := range watcher.Events {
+		log.Println("Template file event:", e)
+		tmpl, err := template.ParseGlob("html/*.*")
+		if err != nil {
+			log.Println("Failed to parse templates:", err)
+		} else {
+			*templates = *tmpl
+		}
+	}
+}
 
 func main() {
 	config.Process()
@@ -24,6 +37,17 @@ func main() {
 	}
 	defer db.Close()
 	if _, err := db.Exec(`PRAGMA foreign_keys = ON;`); err != nil {
+		log.Fatal(err)
+	}
+
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer watcher.Close()
+	go watchTemplates(watcher)
+	err = watcher.Add("html")
+	if err != nil {
 		log.Fatal(err)
 	}
 
