@@ -4,7 +4,9 @@ import (
 	"database/sql"
 	"html/template"
 	"log"
+	"net"
 	"net/http"
+	"net/url"
 
 	"github.com/fsnotify/fsnotify"
 	_ "github.com/mattn/go-sqlite3"
@@ -14,7 +16,7 @@ import (
 	"github.com/svenschwermer/parts-db/server"
 )
 
-var templates = template.Must(template.ParseGlob("html/*.*"))
+var templates = template.Must(template.ParseGlob("html/*.html"))
 
 func watchTemplates(watcher *fsnotify.Watcher) {
 	for e := range watcher.Events {
@@ -57,7 +59,8 @@ func main() {
 		log.Fatal(err)
 	}
 
-	h.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir("html/assets"))))
+	h.Handle("/assets/", http.StripPrefix("/assets/",
+		http.FileServer(http.Dir("html/assets"))))
 	h.HandleFunc(auth.Path, auther.Login)
 	h.HandleFunc("/list", h.List)
 	h.HandleFunc("/change-inventory", h.ChangeInventory)
@@ -72,6 +75,14 @@ func main() {
 		}
 	})
 
-	err = http.ListenAndServe(config.Env.ListenAddress, h)
-	log.Fatal(err)
+	url := &url.URL{
+		Scheme: "http",
+		Host:   config.Env.ListenAddress,
+	}
+	if url.Hostname() == "" {
+		url.Host = net.JoinHostPort("localhost", url.Port())
+	}
+	log.Printf("Listening on %v", url)
+
+	log.Fatal(http.ListenAndServe(config.Env.ListenAddress, h))
 }

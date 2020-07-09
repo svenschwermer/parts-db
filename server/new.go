@@ -11,9 +11,6 @@ import (
 )
 
 type newPartPage struct {
-	Title string
-	Error string
-	Info  string
 	partData
 	Manufacturers    []string
 	Categories       []string
@@ -25,18 +22,19 @@ func (s *Server) New(w http.ResponseWriter, req *http.Request) {
 	if s.auth.RedirectIfRequired(w, req) {
 		return
 	}
-	contents := newPartPage{Title: "New part"}
+	contents := new(newPartPage)
 	contents.PartID = "new"
+	tmplData := getTmplData("New Part", contents)
 	if req.Method == http.MethodPost {
 		if err := s.postNew(w, req); err != nil {
-			contents.Error = err.Error()
+			tmplData.Error = err.Error()
 			// TODO: fill form with entered data
 		} else {
-			contents.Info = "Part added"
+			tmplData.Info = "Part added"
 		}
 	}
-	s.populateLists(&contents)
-	err := s.tmpl.ExecuteTemplate(w, "edit.html", contents)
+	s.populateLists(contents)
+	err := s.tmpl.ExecuteTemplate(w, "edit.html", tmplData)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}

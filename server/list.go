@@ -96,7 +96,8 @@ func (s *Server) List(w http.ResponseWriter, req *http.Request) {
 		partLookup[p.PartID] = p
 	}
 
-	err = s.tmpl.ExecuteTemplate(w, "list.html", parts)
+	tmplData := getTmplData("List", parts)
+	err = s.tmpl.ExecuteTemplate(w, "list.html", tmplData)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}

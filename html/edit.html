@@ -1,169 +1,82 @@
-<!DOCTYPE html>
-<html lang="en">
+{{template "pre-content.html" .}}
 
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
-    integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
-  <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
-    integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"
-    crossorigin="anonymous"></script>
-  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
-    integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
-    crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/3.1.0/mustache.min.js" integrity="sha256-MPgtcamIpCPKRRm1ppJHkvtNBAuE71xcOM+MmQytXi8=" crossorigin="anonymous"></script>
-  <title>{{.Title}} – parts-db</title>
-  <script src="assets/common.js"></script>
-  <script>
-    function mouser() {
-      pn = window.prompt("Mouser P/N", "");
-      if (pn == null)
-        return;
-      var xhttp = new XMLHttpRequest();
-      xhttp.onreadystatechange = function () {
-        if (this.readyState == 4) {
-          if (this.status == 200) {
-            const response = JSON.parse(this.responseText);
-            if (response.Errors.length > 0) {
-              showError("Error: Response contained errors:",
-                JSON.stringify(response.Errors, null, 2));
-              return;
-            }
-            if (response.SearchResults.Parts.length === 0) {
-              showError("Error: Part not found");
-              return;
-            }
-            const data = response.SearchResults.Parts[0];
-            document.getElementById("pn").value = data.ManufacturerPartNumber;
-            document.getElementById("mfr").value = data.Manufacturer;
-            document.getElementById("cat").value = data.Category;
-            document.getElementById("desc").value = data.Description;
-            const no = add_disti();
-            document.getElementById("disti_name_" + no).value = "Mouser";
-            document.getElementById("disti_url_" + no).value = data.ProductDetailUrl;
-          } else
-            showError("Error: Status " + this.status + ": " + this.statusText);
-        }
-      };
-      xhttp.open("POST", "/mouser/v1/search/partnumber");
-      const req = { SearchByPartRequest: { mouserPartNumber: pn, partSearchOptions: "Exact" } };
-      xhttp.send(JSON.stringify(req));
-    }
-    var disti_count = 0;
-    function add_disti() {
-      Mustache.tags = ['{%', '%}'];
-      var tmpl = $('#disti-tmpl').html();
-      Mustache.parse(tmpl);
-      var rendered = Mustache.render(tmpl, {i: ++disti_count});
-      $("#distributors").append(rendered)
-      return disti_count;
-    }
-    function rm_disti(no, btn) {
-      $("#disti-" + no).remove()
-    }
-    function open_url(event, url_field) {
-      if (event.shiftKey)
-        window.open(url_field.value, "_blank");
-    }
-    function url_cursor(event, url_field) {
-      url_field.style.cursor = event.shiftKey ? "pointer" : "default";
-    }
-  </script>
-</head>
+<div id="error" style="display: {{- if .Error}} block {{- else}} none {{- end}};" onclick="hide(this)">ERROR: {{.Error}}
+</div>
+<div id="info" style="display: {{- if .Info}} block {{- else}} none {{- end}};" onclick="hide(this)">INFO: {{.Info}}
+</div>
 
-<body>
-  <nav class="navbar navbar-expand-sm navbar-dark bg-dark">
-    <a class="navbar-brand" href="#">parts-db</a>
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
-      aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarSupportedContent">
-      <ul class="navbar-nav mr-auto">
-        <li class="nav-item">
-          <a class="nav-link" href="/list">List</a>
-        </li>
-        <li class="nav-item active">
-          <a class="nav-link" href="/new">New Part <span class="sr-only">(current)</span></a>
-        </li>
-      </ul>
+{{with .Content}}
+<form method="post" style="padding: 1.5rem; max-width: 40rem;">
+  <div class="form-group">
+    <input type="button" class="btn btn-primary" value="Mouser" onclick="mouser()">
+    <input type="button" class="btn btn-primary" value="Digi-Key" onclick="digikey()" disabled>
+  </div>
+  <div class="form-group form-row">
+    <div class="col">
+      <label for="id-field">Part ID</label>
+      <input name="id" id="id-field" class="form-control" value="{{.PartID}}" readonly>
     </div>
-  </nav>
-  <div id="error" style="display: {{- if .Error}} block {{- else}} none {{- end}};" onclick="hide(this)">ERROR: {{.Error}}</div>
-  <div id="info" style="display: {{- if .Info}} block {{- else}} none {{- end}};" onclick="hide(this)">INFO: {{.Info}}</div>
-  
-  <form method="post" style="padding: 1.5rem; max-width: 40rem;">
-    <div class="form-group">
-      <input type="button" class="btn btn-primary" value="Mouser" onclick="mouser()">
-      <input type="button" class="btn btn-primary" value="Digi-Key" onclick="digikey()" disabled>
-    </div>
-    <div class="form-group form-row">
-      <div class="col">
-        <label for="id-field">Part ID</label>
-        <input name="id" id="id-field" class="form-control" value="{{.PartID}}" readonly>
-      </div>
-      <div class="col">
-        <label for="cat-field">Category</label>
-        <input name="category" id="cat-field" class="form-control" list="cat-list" value="{{.Category}}">
-        <datalist id="cat-list">
-          {{range .Categories}}
-          <option value="{{.}}">
-          {{end}}
-        </datalist>
-      </div>
-    </div>
-    <div class="form-group form-row">
-      <div class="col">
-        <label for="mfr-field">Manufacturer</label>
-        <input name="mfr" id="mfr-field" class="form-control" list="mfr-list" value="{{.Manufacturer}}">
-        <datalist id="mfr-list">
-          {{range .Manufacturers}}
-          <option value="{{.}}">
-          {{end}}
-        </datalist>
-      </div>
-      <div class="col">
-        <label for="pn-field">Part number</label>
-        <input name="pn" id="pn-field" class="form-control" value="{{.PartNumber}}" autofocus>
-      </div>
-    </div>
-    <div class="form-group form-row">
-      <div class="col">
-        <label for="val-field">Value</label>
-        <input name="value" id="val-field" class="form-control" value="{{.Value}}">
-      </div>
-      <div class="col">
-        <label for="package-field">Package</label>
-        <input name="package" id="package-field" class="form-control" value="{{.Package}}">
-      </div>
-    </div>
-    <div class="form-group">
-      <label for="desc-field">Description</label>
-      <textarea name="description" id="desc-field" class="form-control">{{.Description}}</textarea>
-    </div>
-    <div class="form-group form-row">
-      <div class="col">
-        <label for="loc-field">Location</label>
-        <input name="location" id="loc-field" class="form-control" list="loc-list" value="{{.Location}}">
-        <datalist id="loc-list">
-          {{range .Locations}}
-          <option value="{{.}}">
-          {{end}}
-        </datalist>
-      </div>
-      <div class="col">
-        <label for="inventory-field">Inventory</label>
-        <input type="number" name="inventory" id="inventory-field" class="form-control" value="{{.Inventory}}">
-      </div>
-    </div>
-    <div id="distributors">
-      <datalist id="disti-list">
-        {{range .DistributorNames}}
+    <div class="col">
+      <label for="cat-field">Category</label>
+      <input name="category" id="cat-field" class="form-control" list="cat-list" value="{{.Category}}">
+      <datalist id="cat-list">
+        {{range .Categories}}
         <option value="{{.}}">
         {{end}}
       </datalist>
-      <script id="disti-tmpl" type="x-tmpl-mustache">
+    </div>
+  </div>
+  <div class="form-group form-row">
+    <div class="col">
+      <label for="mfr-field">Manufacturer</label>
+      <input name="mfr" id="mfr-field" class="form-control" list="mfr-list" value="{{.Manufacturer}}">
+      <datalist id="mfr-list">
+        {{range .Manufacturers}}
+        <option value="{{.}}">
+        {{end}}
+      </datalist>
+    </div>
+    <div class="col">
+      <label for="pn-field">Part number</label>
+      <input name="pn" id="pn-field" class="form-control" value="{{.PartNumber}}" autofocus>
+    </div>
+  </div>
+  <div class="form-group form-row">
+    <div class="col">
+      <label for="val-field">Value</label>
+      <input name="value" id="val-field" class="form-control" value="{{.Value}}">
+    </div>
+    <div class="col">
+      <label for="package-field">Package</label>
+      <input name="package" id="package-field" class="form-control" value="{{.Package}}">
+    </div>
+  </div>
+  <div class="form-group">
+    <label for="desc-field">Description</label>
+    <textarea name="description" id="desc-field" class="form-control">{{.Description}}</textarea>
+  </div>
+  <div class="form-group form-row">
+    <div class="col">
+      <label for="loc-field">Location</label>
+      <input name="location" id="loc-field" class="form-control" list="loc-list" value="{{.Location}}">
+      <datalist id="loc-list">
+        {{range .Locations}}
+        <option value="{{.}}">
+        {{end}}
+      </datalist>
+    </div>
+    <div class="col">
+      <label for="inventory-field">Inventory</label>
+      <input type="number" name="inventory" id="inventory-field" class="form-control" value="{{.Inventory}}">
+    </div>
+  </div>
+  <div id="distributors">
+    <datalist id="disti-list">
+      {{range .DistributorNames}}
+      <option value="{{.}}">
+      {{end}}
+    </datalist>
+    <script id="disti-tmpl" type="x-tmpl-mustache">
         <div id="disti-{%i%}" class="form-group">
           <label for="distri-name-{%i%}">Distributor {%i%}</label>
           <div class="form-row align-items-center">
@@ -184,12 +97,71 @@
           </div>
         </div>
       </script>
-    </div>
-    <div class="form-group">
-      <input type="button" class="btn btn-primary" value="Add Distributor" onclick="add_disti()">
-      <input type="submit" class="btn btn-primary" value="Submit">
-    </div>
-  </form>
-</body>
+  </div>
+  <div class="form-group">
+    <input type="button" class="btn btn-primary" value="Add Distributor" onclick="add_disti()">
+    <input type="submit" class="btn btn-primary" value="Submit">
+  </div>
+</form>
+{{end}}
 
-</html>
+<script src="assets/common.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/3.1.0/mustache.min.js" integrity="sha256-MPgtcamIpCPKRRm1ppJHkvtNBAuE71xcOM+MmQytXi8=" crossorigin="anonymous"></script>
+
+<script>
+  function mouser() {
+    pn = window.prompt("Mouser P/N", "");
+    if (pn == null)
+      return;
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function () {
+      if (this.readyState == 4) {
+        if (this.status == 200) {
+          const response = JSON.parse(this.responseText);
+          if (response.Errors.length > 0) {
+            showError("Error: Response contained errors:",
+              JSON.stringify(response.Errors, null, 2));
+            return;
+          }
+          if (response.SearchResults.Parts.length === 0) {
+            showError("Error: Part not found");
+            return;
+          }
+          const data = response.SearchResults.Parts[0];
+          document.getElementById("pn").value = data.ManufacturerPartNumber;
+          document.getElementById("mfr").value = data.Manufacturer;
+          document.getElementById("cat").value = data.Category;
+          document.getElementById("desc").value = data.Description;
+          const no = add_disti();
+          document.getElementById("disti_name_" + no).value = "Mouser";
+          document.getElementById("disti_url_" + no).value = data.ProductDetailUrl;
+        } else
+          showError("Error: Status " + this.status + ": " + this.statusText);
+      }
+    };
+    xhttp.open("POST", "/mouser/v1/search/partnumber");
+    const req = { SearchByPartRequest: { mouserPartNumber: pn, partSearchOptions: "Exact" } };
+    xhttp.send(JSON.stringify(req));
+  }
+  var disti_count = 0;
+  function add_disti() {
+    Mustache.tags = ['{%', '%}'];
+    var tmpl = $('#disti-tmpl').html();
+    Mustache.parse(tmpl);
+    var rendered = Mustache.render(tmpl, { i: ++disti_count });
+    $("#distributors").append(rendered)
+    return disti_count;
+  }
+  function rm_disti(no, btn) {
+    $("#disti-" + no).remove()
+  }
+  function open_url(event, url_field) {
+    if (event.shiftKey)
+      window.open(url_field.value, "_blank");
+  }
+  function url_cursor(event, url_field) {
+    url_field.style.cursor = event.shiftKey ? "pointer" : "default";
+  }
+</script>
+
+{{template "post-content.html" .}}

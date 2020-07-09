@@ -46,7 +46,10 @@ func (s *Server) RedirectIfRequired(w http.ResponseWriter, req *http.Request) bo
 }
 
 func (s *Server) Login(w http.ResponseWriter, req *http.Request) {
-	var errorString string
+	tmplData := struct {
+		Title, Error string
+		Nav          interface{}
+	}{Title: "Login"}
 
 	if req.Method == http.MethodPost {
 		if err := req.ParseForm(); err != nil {
@@ -66,10 +69,10 @@ func (s *Server) Login(w http.ResponseWriter, req *http.Request) {
 			http.Redirect(w, req, redirect, http.StatusFound)
 			return
 		}
-		errorString = "ERROR: Invalid Password"
+		tmplData.Error = "ERROR: Invalid Password"
 	}
 
-	err := s.tmpl.ExecuteTemplate(w, "login.html", errorString)
+	err := s.tmpl.ExecuteTemplate(w, "login.html", tmplData)
 	if err != nil {
 		w.Write([]byte(err.Error()))
 	}

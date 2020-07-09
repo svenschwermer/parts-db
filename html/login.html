@@ -1,21 +1,19 @@
-<!DOCTYPE html>
-<html lang="en">
+{{template "pre-content.html" .}}
 
-<head>
-  <meta charset="utf-8" />
-  <title>Login – parts-db</title>
-  <link rel="stylesheet" type="text/css" href="assets/style.css">
-</head>
+<div class="container">
+  <!--{{ if .Error }}-->
+  <div class="alert alert-danger" role="alert">
+    {{ .Error }}
+  </div>
+  <!--{{ end }}-->
 
-<body>
-  <h1>Login</h1>
-  <div id="error" style="display: {{- if .}} block {{- else}} none {{- end}};">{{.}}</div>
   <div>
-    <form method="post">
-      <input type="password" name="password" placeholder="Password" required autofocus />
-      <input type="submit" />
+    <form method="post" class="form-inline">
+      <input type="password" name="password" placeholder="Password" required autofocus
+        class="form-control mb-2 mr-sm-2" />
+      <input type="submit" class="btn btn-primary mb-2" />
     </form>
   </div>
-</body>
+</div>
 
-</html>
+{{template "post-content.html" .}}
