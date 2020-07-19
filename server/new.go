@@ -2,12 +2,17 @@ package server
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
 
 	"github.com/svenschwermer/parts-db/si"
+)
+
+var (
+	errPartNumberRequired = errors.New("part number required")
 )
 
 type newPartPage struct {
@@ -68,6 +73,11 @@ func (s *Server) postNew(w http.ResponseWriter, req *http.Request) error {
 	}
 	defer tx.Rollback()
 
+	pn := getPostString(req, "pn")
+	if !pn.Valid {
+		return errPartNumberRequired
+	}
+
 	var catID sql.NullInt64
 	cat := req.PostForm.Get("category")
 	if cat != "" {
@@ -92,7 +102,7 @@ func (s *Server) postNew(w http.ResponseWriter, req *http.Request) error {
 		INSERT INTO parts
 		(pn,manufacturer,category,value,unit,package,description,location,inventory)
 		VALUES
-		(?,?,?,?,?,?,?,?,?)`, getPostString(req, "pn"),
+		(?,?,?,?,?,?,?,?,?)`, pn,
 		getPostString(req, "manufacturer"), catID, mag, unit,
 		getPostString(req, "package"), getPostString(req, "description"),
 		getPostString(req, "location"), req.PostForm.Get("inventory"))

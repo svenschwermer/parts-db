@@ -43,6 +43,7 @@ func Parse(s string) (*Quantity, error) {
 func deleteSpaces(s string) string {
 	result := make([]rune, 0, len(s))
 	for _, r := range s {
+		// U+200B: ZERO WIDTH SPACE
 		if !unicode.IsSpace(r) && r != '\u200B' {
 			result = append(result, r)
 		}

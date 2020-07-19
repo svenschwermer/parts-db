@@ -1,0 +1,3 @@
+- [ ] Delete Part button
+- [ ] Digi-Key import
+- [ ] Edit Part backend

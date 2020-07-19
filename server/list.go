@@ -2,10 +2,10 @@ package server
 
 import (
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/svenschwermer/parts-db/si"
 )
@@ -96,16 +96,11 @@ func (s *Server) List(w http.ResponseWriter, req *http.Request) {
 		partLookup[p.PartID] = p
 	}
 
-	tmplData := getTmplData("List", parts)
+	tmplData := getTmplData("Parts List", parts)
 	err = s.tmpl.ExecuteTemplate(w, "list.html", tmplData)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
-}
-
-type changeInventoryReq struct {
-	Part  string
-	Delta int
 }
 
 func (s *Server) ChangeInventory(w http.ResponseWriter, req *http.Request) {
@@ -118,34 +113,21 @@ func (s *Server) ChangeInventory(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	decoder := json.NewDecoder(req.Body)
-	reqContent := new(changeInventoryReq)
-	if err := decoder.Decode(reqContent); err != nil {
+	part := req.PostForm.Get("part")
+	qty, err := strconv.Atoi(req.PostForm.Get("qty"))
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	_, err := s.db.Exec(`
+
+	_, err = s.db.Exec(`
 		UPDATE parts
-		SET inventory = inventory + ?
+		SET inventory = ?
 		WHERE id = ?
-		  AND (inventory + ?) >= 0
-	`, reqContent.Delta, reqContent.Part, reqContent.Delta)
+	`, qty, part)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	var newInventory int
-	err = s.db.QueryRow(`
-		SELECT inventory
-		FROM parts
-		WHERE id = ?
-	`, reqContent.Part).Scan(&newInventory)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	log.Printf("Changing inventory for part (id=%v) to %d", reqContent.Part, newInventory)
-	w.Write([]byte(fmt.Sprint(newInventory)))
+	log.Printf("Changing inventory for part (id=%s) to %d", part, qty)
 }

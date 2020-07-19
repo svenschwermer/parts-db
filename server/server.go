@@ -41,7 +41,7 @@ type tmplData struct {
 }
 
 var defaultNav = []nav{
-	{Label: "List", HRef: "/list"},
+	{Label: "Parts List", HRef: "/list"},
 	{Label: "New Part", HRef: "/new"},
 }
 

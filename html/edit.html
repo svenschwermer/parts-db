@@ -1,167 +1,192 @@
 {{template "pre-content.html" .}}
 
-<div id="error" style="display: {{- if .Error}} block {{- else}} none {{- end}};" onclick="hide(this)">ERROR: {{.Error}}
-</div>
-<div id="info" style="display: {{- if .Info}} block {{- else}} none {{- end}};" onclick="hide(this)">INFO: {{.Info}}
-</div>
+<div class="container">
+  <h1>{{.Title}}</h1>
 
-{{with .Content}}
-<form method="post" style="padding: 1.5rem; max-width: 40rem;">
-  <div class="form-group">
-    <input type="button" class="btn btn-primary" value="Mouser" onclick="mouser()">
-    <input type="button" class="btn btn-primary" value="Digi-Key" onclick="digikey()" disabled>
-  </div>
-  <div class="form-group form-row">
-    <div class="col">
-      <label for="id-field">Part ID</label>
-      <input name="id" id="id-field" class="form-control" value="{{.PartID}}" readonly>
+  <div class="alert alert-danger d-none" role="alert">ERROR: {{.Error}}</div>
+  <div class="alert alert-info d-none" role="alert">{{.Info}}</div>
+
+  <form method="post">
+    {{with .Content}}
+    <div class="form-group form-row">
+      <div class="col">
+        <label for="id-field">Part ID</label>
+        <input name="id" id="id-field" class="form-control" value="{{.PartID}}" readonly>
+      </div>
+      <div class="col">
+        <label for="cat-field">Category</label>
+        <input name="category" id="cat-field" class="form-control" list="cat-list" value="{{.Category}}">
+        <datalist id="cat-list">
+          {{range .Categories}}
+          <option value="{{.}}">
+            {{end}}
+        </datalist>
+      </div>
     </div>
-    <div class="col">
-      <label for="cat-field">Category</label>
-      <input name="category" id="cat-field" class="form-control" list="cat-list" value="{{.Category}}">
-      <datalist id="cat-list">
-        {{range .Categories}}
+    <div class="form-group form-row">
+      <div class="col">
+        <label for="mfr-field">Manufacturer</label>
+        <input name="mfr" id="mfr-field" class="form-control" list="mfr-list" value="{{.Manufacturer}}">
+        <datalist id="mfr-list">
+          {{range .Manufacturers}}
+          <option value="{{.}}">
+            {{end}}
+        </datalist>
+      </div>
+      <div class="col">
+        <label for="pn-field">Part number</label>
+        <input name="pn" id="pn-field" class="form-control" value="{{.PartNumber}}" autofocus>
+      </div>
+    </div>
+    <div class="form-group form-row">
+      <div class="col">
+        <label for="val-field">Value</label>
+        <input name="value" id="val-field" class="form-control" value="{{if .Value}}{{.Value}}{{if .Unit}} {{.UnitPrefix}}{{.Unit}}{{end}}{{end}}">
+      </div>
+      <div class="col">
+        <label for="package-field">Package</label>
+        <input name="package" id="package-field" class="form-control" value="{{.Package}}">
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="desc-field">Description</label>
+      <textarea name="description" id="desc-field" class="form-control">{{.Description}}</textarea>
+    </div>
+    <div class="form-group form-row">
+      <div class="col">
+        <label for="loc-field">Location</label>
+        <input name="location" id="loc-field" class="form-control" list="loc-list" value="{{.Location}}">
+        <datalist id="loc-list">
+          {{range .Locations}}
+          <option value="{{.}}">
+            {{end}}
+        </datalist>
+      </div>
+      <div class="col">
+        <label for="inventory-field">Inventory</label>
+        <input type="number" name="inventory" id="inventory-field" class="form-control" value="{{.Inventory}}">
+      </div>
+    </div>
+    <fieldset id="distributors" class="form-group pl-3 pr-3 border rounded">
+      <legend class="w-auto pl-1 pr-1">Distributors</legend>
+      <div class="form-group">
+        <input type="button" class="btn btn-primary" value="Add Distributor" onclick="add_disti()">
+      </div>
+      <datalist id="disti-list">
+        {{range .DistributorNames}}
         <option value="{{.}}">
-        {{end}}
+          {{end}}
       </datalist>
-    </div>
-  </div>
-  <div class="form-group form-row">
-    <div class="col">
-      <label for="mfr-field">Manufacturer</label>
-      <input name="mfr" id="mfr-field" class="form-control" list="mfr-list" value="{{.Manufacturer}}">
-      <datalist id="mfr-list">
-        {{range .Manufacturers}}
-        <option value="{{.}}">
-        {{end}}
-      </datalist>
-    </div>
-    <div class="col">
-      <label for="pn-field">Part number</label>
-      <input name="pn" id="pn-field" class="form-control" value="{{.PartNumber}}" autofocus>
-    </div>
-  </div>
-  <div class="form-group form-row">
-    <div class="col">
-      <label for="val-field">Value</label>
-      <input name="value" id="val-field" class="form-control" value="{{.Value}}">
-    </div>
-    <div class="col">
-      <label for="package-field">Package</label>
-      <input name="package" id="package-field" class="form-control" value="{{.Package}}">
-    </div>
-  </div>
-  <div class="form-group">
-    <label for="desc-field">Description</label>
-    <textarea name="description" id="desc-field" class="form-control">{{.Description}}</textarea>
-  </div>
-  <div class="form-group form-row">
-    <div class="col">
-      <label for="loc-field">Location</label>
-      <input name="location" id="loc-field" class="form-control" list="loc-list" value="{{.Location}}">
-      <datalist id="loc-list">
-        {{range .Locations}}
-        <option value="{{.}}">
-        {{end}}
-      </datalist>
-    </div>
-    <div class="col">
-      <label for="inventory-field">Inventory</label>
-      <input type="number" name="inventory" id="inventory-field" class="form-control" value="{{.Inventory}}">
-    </div>
-  </div>
-  <div id="distributors">
-    <datalist id="disti-list">
-      {{range .DistributorNames}}
-      <option value="{{.}}">
-      {{end}}
-    </datalist>
-    <script id="disti-tmpl" type="x-tmpl-mustache">
-        <div id="disti-{%i%}" class="form-group">
-          <label for="distri-name-{%i%}">Distributor {%i%}</label>
+      <script id="disti-tmpl" type="x-tmpl-mustache">
+        <div class="disti-row form-group">
           <div class="form-row align-items-center">
             <div class="col form-row">
               <div class="col-4">
-                <input name="disti_name_{%i%}" id="distri-name-{%i%}" class="form-control" placeholder="Name">
+                <input name="disti_name_{%i%}" class="form-control" placeholder="Name" value="{%name%}">
               </div>
               <div class="col-8">
-                <input type="url" name="disti_url_{%i%}" name="disti-url-{%i%}" class="form-control" placeholder="URL"
-                  onclick="open_url(event, this)" onmousemove="url_cursor(event, this)">
+                <input type="url" name="disti_url_{%i%}" class="form-control" placeholder="URL" value="{%url%}">
               </div>
             </div>
             <div class="col-auto">
-              <button type="button" class="close" onclick="rm_disti({%i%})" style="padding: 0.4rem" aria-label="Close">
+              <button type="button" class="close" style="padding: 0.4rem" aria-label="Close">
                 <span aria-hidden="true">&times;</span>
               </button>
             </div>
           </div>
         </div>
       </script>
-  </div>
-  <div class="form-group">
-    <input type="button" class="btn btn-primary" value="Add Distributor" onclick="add_disti()">
-    <input type="submit" class="btn btn-primary" value="Submit">
-  </div>
-</form>
-{{end}}
+    </fieldset>
+    {{end}}
+    <div class="form-group">
+      {{if eq .Title "New Part"}}
+      <input type="button" value="Import from Mouser" id="mouser" class="btn btn-primary">
+      <input type="button" value="Import from Digi-Key" id="digikey" class="btn btn-primary" disabled>
+      {{else}}
+      <input type="button" value="Delete Part" class="btn btn-danger" disabled>
+      {{end}}
 
-<script src="assets/common.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/3.1.0/mustache.min.js" integrity="sha256-MPgtcamIpCPKRRm1ppJHkvtNBAuE71xcOM+MmQytXi8=" crossorigin="anonymous"></script>
+      <input type="submit" value="Save" class="btn btn-primary float-right">
+    </div>
+  </form>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/3.1.0/mustache.min.js"
+  integrity="sha256-MPgtcamIpCPKRRm1ppJHkvtNBAuE71xcOM+MmQytXi8=" crossorigin="anonymous"></script>
 
 <script>
-  function mouser() {
-    pn = window.prompt("Mouser P/N", "");
-    if (pn == null)
-      return;
-    var xhttp = new XMLHttpRequest();
-    xhttp.onreadystatechange = function () {
-      if (this.readyState == 4) {
-        if (this.status == 200) {
-          const response = JSON.parse(this.responseText);
-          if (response.Errors.length > 0) {
-            showError("Error: Response contained errors:",
-              JSON.stringify(response.Errors, null, 2));
-            return;
-          }
-          if (response.SearchResults.Parts.length === 0) {
-            showError("Error: Part not found");
-            return;
-          }
-          const data = response.SearchResults.Parts[0];
-          document.getElementById("pn").value = data.ManufacturerPartNumber;
-          document.getElementById("mfr").value = data.Manufacturer;
-          document.getElementById("cat").value = data.Category;
-          document.getElementById("desc").value = data.Description;
-          const no = add_disti();
-          document.getElementById("disti_name_" + no).value = "Mouser";
-          document.getElementById("disti_url_" + no).value = data.ProductDetailUrl;
-        } else
-          showError("Error: Status " + this.status + ": " + this.statusText);
-      }
+  $("#mouser").click(function() {
+    const req = {
+      SearchByPartRequest: {
+        mouserPartNumber: window.prompt("Mouser P/N", ""),
+        partSearchOptions: "Exact",
+      },
     };
-    xhttp.open("POST", "/mouser/v1/search/partnumber");
-    const req = { SearchByPartRequest: { mouserPartNumber: pn, partSearchOptions: "Exact" } };
-    xhttp.send(JSON.stringify(req));
-  }
-  var disti_count = 0;
-  function add_disti() {
+    if (req.SearchByPartRequest.mouserPartNumber == null)
+      return;
+
+    $.ajax({
+      type: "POST",
+      url: "/mouser/v1/search/partnumber",
+      data: JSON.stringify(req),
+      contentType: "application/json; charset=utf-8",
+      dataType: "json",
+      success: function(data) {
+        if (data.Errors.length > 0) {
+          const err = JSON.stringify(data.Errors, null, 2);
+          $(".alert-danger").text("ERROR: Response contained errors:" + err).removeClass("d-none");
+          return;
+        }
+        if (data.SearchResults.Parts.length === 0) {
+          $(".alert-danger").text("ERROR: Part not found").removeClass("d-none");
+          return;
+        }
+        const part = data.SearchResults.Parts[0];
+        $("#pn-field").val(part.ManufacturerPartNumber);
+        $("#mfr-field").val(part.Manufacturer);
+        $("#cat-field").val(part.Category);
+        $("#desc-field").val(part.Description);
+        add_disti("Mouser", part.ProductDetailUrl);
+      },
+      error: function(jqXHR, textStatus, errorThrown) { 
+        $(".alert-danger").text("ERROR: " + textStatus).removeClass("d-none");
+      },
+    })
+  });
+
+  var disti_idx = 0;
+  function add_disti(name, url) {
     Mustache.tags = ['{%', '%}'];
     var tmpl = $('#disti-tmpl').html();
     Mustache.parse(tmpl);
-    var rendered = Mustache.render(tmpl, { i: ++disti_count });
+    var rendered = Mustache.render(tmpl, {
+      i: ++disti_idx,
+      name: name,
+      url: url,
+    });
     $("#distributors").append(rendered)
-    return disti_count;
   }
-  function rm_disti(no, btn) {
-    $("#disti-" + no).remove()
-  }
-  function open_url(event, url_field) {
+
+  $("#distributors").on("click", "button.close", function() {
+    $(this).closest(".disti-row").remove();
+  });
+
+  $("#distributors").on("mousemove", "input[type=url]", function(event) {
+    $(this).css("cursor", event.shiftKey ? "pointer" : "auto");
+  }).on("click", "input[type=url]", function(event) {
     if (event.shiftKey)
-      window.open(url_field.value, "_blank");
-  }
-  function url_cursor(event, url_field) {
-    url_field.style.cursor = event.shiftKey ? "pointer" : "default";
-  }
+      window.open($(this).val(), "_blank");
+  });
+
+  {{range.Content.Distributors}}
+  add_disti("{{.Name}}", "{{.URL}}");
+  {{end}}
+  {{if .Error}}
+  $(".alert-danger").removeClass("d-none");
+  {{end}}
+  {{if .Info}}
+  $(".alert-info").removeClass("d-none");
+  {{end}}
 </script>
 
 {{template "post-content.html" .}}

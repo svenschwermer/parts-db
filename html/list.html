@@ -1,11 +1,11 @@
 {{template "pre-content.html" .}}
 
 <div class="container-fluid">
-  <div class="alert alert-danger" role="alert" onclick="hide(this)">
-    This is an error message!
-  </div>
+  <h1>{{.Title}}</h1>
 
-  <table class="table">
+  <div class="alert alert-danger d-none" role="alert"></div>
+
+  <table class="table table-hover">
     <thead>
       <tr>
         <th scope="col">Part number</th scope="col">
@@ -21,18 +21,20 @@
     </thead>
     <tbody>
       {{range .Content}}
-      <tr>
-        <td><a href="/edit?part={{.PartID}}">{{.PartNumber}}</a></td>
+      <tr class="part-row" style="cursor: pointer;" data-part-id="{{.PartID}}">
+        <td>{{.PartNumber}}</td>
         <td>{{.Manufacturer}}</td>
         <td>{{.Category}}</td>
-        <td>{{.Value}}&#8239;{{.UnitPrefix}}{{.Unit}}</td>
+        <td>
+          {{if .Value}}
+          {{.Value}}&#8239;{{.UnitPrefix}}{{.Unit}}
+          {{end}}
+        </td>
         <td>{{.Package}}</td>
         <td>{{.Description}}</td>
         <td>{{.Location}}</td>
-        <td class="inventory">
-          <span id="inventory_{{.PartID}}">{{.Inventory}}</span>
-          <a href="javascript:changeInventory('{{.PartID}}', 1)">▲</a>
-          <a href="javascript:changeInventory('{{.PartID}}', -1)">▼</a>
+        <td>
+          <input type="number" name="inventory" class="form-control part-inventory" value="{{.Inventory}}">
         </td>
         <td>
           {{if .Distributors}}
@@ -49,21 +51,21 @@
   </table>
 </div>
 
-<script src="assets/common.js"></script>
 <script>
-  function changeInventory(partId, delta) {
-    var xhttp = new XMLHttpRequest();
-    xhttp.onreadystatechange = function () {
-      if (this.readyState == 4) {
-        if (this.status == 200)
-          document.getElementById("inventory_" + partId).innerText = this.responseText;
-        else
-          showError("Error: Status " + this.status + ": " + this.statusText);
-      }
-    };
-    xhttp.open("POST", "change-inventory", true);
-    xhttp.send(JSON.stringify({ "part": partId, "delta": delta }));
-  }
+  $(".part-row").click(function() {
+    const part_id = $(this).attr("data-part-id");
+    location.href = "/edit?part=" + part_id;
+  }).find("a, input").click(function(e) {
+    e.stopImmediatePropagation();
+  });
+
+  $(".part-inventory").change(function() {
+    const part_id = $(this).closest("tr").attr("data-part-id");
+    const data = { "part": part_id, "qty": $(this).val() };
+    $.post("/change-inventory", data).fail(function(jqXHR) {
+      $(".alert-danger").text("ERROR: " + jqXHR.responseText).removeClass("d-none");
+    });
+  });
 </script>
 
 {{template "post-content.html" .}}

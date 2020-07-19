@@ -69,7 +69,7 @@ func (s *Server) Login(w http.ResponseWriter, req *http.Request) {
 			http.Redirect(w, req, redirect, http.StatusFound)
 			return
 		}
-		tmplData.Error = "ERROR: Invalid Password"
+		tmplData.Error = "Invalid Password"
 	}
 
 	err := s.tmpl.ExecuteTemplate(w, "login.html", tmplData)

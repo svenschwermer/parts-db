@@ -1,17 +1,17 @@
 {{template "pre-content.html" .}}
 
 <div class="container">
+  <h1>{{.Title}}</h1>
+
   <!--{{ if .Error }}-->
-  <div class="alert alert-danger" role="alert">
-    {{ .Error }}
-  </div>
+  <div class="alert alert-danger" role="alert">ERROR: {{.Error}}</div>
   <!--{{ end }}-->
 
   <div>
     <form method="post" class="form-inline">
       <input type="password" name="password" placeholder="Password" required autofocus
-        class="form-control mb-2 mr-sm-2" />
-      <input type="submit" class="btn btn-primary mb-2" />
+        class="form-control mb-2 mr-sm-2">
+      <input type="submit" value="Login" class="btn btn-primary mb-2">
     </form>
   </div>
 </div>
